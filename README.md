@@ -41,6 +41,8 @@ You can pass auth tokens to the server. These are **not set by default** and the
 
 - `ENABLE_AUTO_UPDATE` (default: `true`)
   - If `true`, runs `./hytale-downloader` on every container start.
+- `SKIP_DELETE_ON_FORBIDDEN` (default: `false`)
+  - If `true`, the startup script will **not** delete `~/.hytale-downloader-credentials.json` when it detects a `403 Forbidden`.
 
 ### AOT cache
 

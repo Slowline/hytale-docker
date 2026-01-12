@@ -12,6 +12,7 @@ services:
       HYTALE_PORT: "5520"
       USE_AOT_CACHE: "true"
       ENABLE_AUTO_UPDATE: "true"
+      SKIP_DELETE_ON_FORBIDDEN: "false"
       ACCEPT_EARLY_PLUGINS: "false"
       ALLOW_OP: "false"
       ASSETS_PATH: "/hytale/Assets.zip"

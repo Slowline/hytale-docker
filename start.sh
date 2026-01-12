@@ -12,8 +12,12 @@ if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
     if [ $EXIT_CODE -ne 0 ]; then
         echo "Downloader error: $EXIT_CODE"
         if grep -q "403 Forbidden" <<< "$(./hytale-downloader -print-version 2>&1 || true)"; then
-            echo "403 Forbidden detected! Clearing downloader credentials..."
-            rm -f ~/.hytale-downloader-credentials.json
+            if [ "${SKIP_DELETE_ON_FORBIDDEN:-false}" = "true" ]; then
+                echo "403 Forbidden detected! SKIP_DELETE_ON_FORBIDDEN=true, keeping downloader credentials."
+            else
+                echo "403 Forbidden detected! Clearing downloader credentials..."
+                rm -f ~/.hytale-downloader-credentials.json
+            fi
         fi
     fi
 else
