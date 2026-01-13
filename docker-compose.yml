@@ -1,5 +1,6 @@
 services:
   hytale-server:
+    image: ghcr.io/slowline/hytale-docker
     build: .
     container_name: hytale
     stdin_open: true
