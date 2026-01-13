@@ -1,5 +1,3 @@
-# Untested til the 13.01.2026
-
 Docker setup for running the Hytale dedicated server.
 
 This container downloads/updates the server on startup using the official Hytale Downloader CLI, then starts `HytaleServer.jar` with the options configured via environment variables.
