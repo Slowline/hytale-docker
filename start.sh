@@ -6,8 +6,12 @@ set -e
 # -------------------------------
 if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
     echo "Auto-update enabled. Downloading latest server..."
-    ./hytale-downloader
+    DOWNLOAD_ZIP="/hytale/game.zip"
+
+    set +e
+    ./hytale-downloader -download-path "$DOWNLOAD_ZIP"
     EXIT_CODE=$?
+    set -e
 
     if [ $EXIT_CODE -ne 0 ]; then
         echo "Downloader error: $EXIT_CODE"
@@ -19,7 +23,21 @@ if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
                 rm -f ~/.hytale-downloader-credentials.json
             fi
         fi
+        exit $EXIT_CODE
     fi
+
+    if [ ! -f "$DOWNLOAD_ZIP" ]; then
+        echo "ERROR: Download expected at $DOWNLOAD_ZIP but file not found."
+        exit 1
+    fi
+
+    echo "Unpacking $DOWNLOAD_ZIP into /hytale ..."
+
+    # If a previous install exists, remove the old jar so the new one is guaranteed to be used.
+    rm -f /hytale/Server/HytaleServer.jar
+
+    unzip -o "$DOWNLOAD_ZIP" -d /hytale
+    rm -f "$DOWNLOAD_ZIP"
 else
     echo "Auto-update disabled. Skipping download."
 fi
