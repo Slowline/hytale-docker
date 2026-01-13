@@ -1,4 +1,3 @@
-
 services:
   hytale-server:
     build: .
@@ -9,6 +8,8 @@ services:
       - "5520:5520/udp"
     volumes:
       - hytale-data:/hytale
+      # Allows to persist server authorization with /auth persistence Encrypted
+      # - /etc/machine-id:/etc/machine-id:ro
     environment:
       HYTALE_PORT: "5520"
       USE_AOT_CACHE: "true"
