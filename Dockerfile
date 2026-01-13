@@ -1,5 +1,5 @@
 # Base image with Java 25 EA
-FROM openjdk:25-ea-slim
+FROM eclipse-temurin:25.0.1_8-jdk-jammy
 
 LABEL org.opencontainers.image.source="https://github.com/Slowline/hytale-docker"
 
