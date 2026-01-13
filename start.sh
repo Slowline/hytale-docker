@@ -10,12 +10,12 @@ DOWNLOADER_BIN="${DOWNLOADER_BIN:-hytale-downloader}"
 
 # Always record the currently available downloader-reported version for visibility/debugging.
 # We'll use it to decide whether we need to download/unpack a new server.
-CURRENT_VERSION_RAW="$($DOWNLOADER_BIN -version 2>&1 || true)"
+CURRENT_VERSION_RAW="$($DOWNLOADER_BIN -print-version 2>&1 || true)"
 CURRENT_VERSION="$(echo "$CURRENT_VERSION_RAW" | tr -d '\r' | tail -n 1)"
 mkdir -p "$(dirname "$VERSION_FILE")"
 
 if [ -z "$CURRENT_VERSION" ]; then
-    echo "WARNING: Could not determine current version from downloader (-version). Output was:"
+    echo "WARNING: Could not determine current version from downloader (-print-version). Output was:"
     echo "$CURRENT_VERSION_RAW"
 fi
 
