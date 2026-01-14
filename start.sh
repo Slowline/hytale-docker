@@ -10,7 +10,7 @@ DOWNLOADER_BIN="${DOWNLOADER_BIN:-hytale-downloader}"
 
 # Always record the currently available downloader-reported version for visibility/debugging.
 # We'll use it to decide whether we need to download/unpack a new server.
-CURRENT_VERSION_RAW="$($DOWNLOADER_BIN -print-version 2>&1 || true)"
+CURRENT_VERSION_RAW="$(($DOWNLOADER_BIN -print-version 2>&1 || true) | tee /dev/stderr)"
 CURRENT_VERSION="$(echo "$CURRENT_VERSION_RAW" | tr -d '\r' | tail -n 1)"
 mkdir -p "$(dirname "$VERSION_FILE")"
 
@@ -48,7 +48,7 @@ if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
         DOWNLOAD_ZIP="/hytale/game.zip"
 
         set +e
-    $DOWNLOADER_BIN -download-path "$DOWNLOAD_ZIP"
+        $DOWNLOADER_BIN -download-path "$DOWNLOAD_ZIP"
         EXIT_CODE=$?
         set -e
 
