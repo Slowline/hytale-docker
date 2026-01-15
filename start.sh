@@ -4,54 +4,73 @@ set -e
 # -------------------------------
 # Auto-update Hytale server
 # -------------------------------
-VERSION_FILE="/hytale/Server/version.txt"
 JAR_FILE="/hytale/Server/HytaleServer.jar"
 DOWNLOADER_BIN="${DOWNLOADER_BIN:-hytale-downloader}"
 
-# Always record the currently available downloader-reported version for visibility/debugging.
-# We'll use it to decide whether we need to download/unpack a new server.
-CURRENT_VERSION_RAW="$(($DOWNLOADER_BIN -print-version 2>&1 || true) | tee /dev/stderr)"
-CURRENT_VERSION="$(echo "$CURRENT_VERSION_RAW" | tr -d '\r' | tail -n 1)"
-mkdir -p "$(dirname "$VERSION_FILE")"
+# -------------------------------
+# Update hytale-downloader if needed
+# -------------------------------
+echo "Checking for hytale-downloader updates..."
+$DOWNLOADER_BIN -check-update
 
-if [ -z "$CURRENT_VERSION" ]; then
-    echo "WARNING: Could not determine current version from downloader (-print-version). Output was:"
-    echo "$CURRENT_VERSION_RAW"
-fi
-
-PREVIOUS_VERSION=""
-if [ -f "$VERSION_FILE" ]; then
-    PREVIOUS_VERSION="$(tr -d '\r' < "$VERSION_FILE" | tail -n 1)"
-fi
-
-echo "$CURRENT_VERSION" > "$VERSION_FILE"
-
+# -------------------------------
+# Check HytaleServer.jar version
+# -------------------------------
 if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
-    # If the Jar is missing (e.g., empty/new volume or partial install), force a download even when version.txt exists.
+    # Get available version from downloader
+    AVAILABLE_VERSION_RAW="$($DOWNLOADER_BIN -print-version 2>&1 || true)"
+    AVAILABLE_VERSION="$(echo "$AVAILABLE_VERSION_RAW" | tr -d '\r' | tail -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    
+    if [ -z "$AVAILABLE_VERSION" ]; then
+        echo "ERROR: Could not determine available version from downloader (-print-version). Output was:"
+        echo "$AVAILABLE_VERSION_RAW"
+        exit 1
+    fi
+    
+    echo "Available HytaleServer.jar version: $AVAILABLE_VERSION"
+    
+    # Get installed version if jar exists
+    INSTALLED_VERSION=""
+    if [ -f "$JAR_FILE" ]; then
+        INSTALLED_VERSION_RAW="$(java -jar "$JAR_FILE" --version 2>&1 || true)"
+        # Extract version from "HytaleServer vYYYY.mm.dd-TTTTTTTTT (release)"
+        # Pattern matches: everything up to "v", capture non-space characters after "v", then everything else
+        INSTALLED_VERSION="$(echo "$INSTALLED_VERSION_RAW" | tr -d '\r' | sed -n 's/.*v\([^ ]*\).*/\1/p' | head -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+        
+        if [ -z "$INSTALLED_VERSION" ]; then
+            echo "WARNING: Could not extract version from installed jar. Output was:"
+            echo "$INSTALLED_VERSION_RAW"
+            echo "Treating as outdated and will download..."
+        else
+            echo "Installed HytaleServer.jar version: $INSTALLED_VERSION"
+        fi
+    else
+        echo "HytaleServer.jar not found. Will download..."
+    fi
+    
+    # Determine if update is needed
     NEED_DOWNLOAD="false"
     if [ ! -f "$JAR_FILE" ]; then
         NEED_DOWNLOAD="true"
-        echo "Auto-update enabled. Server jar missing ($JAR_FILE). Forcing download..."
-    elif [ -n "$PREVIOUS_VERSION" ] && [ -n "$CURRENT_VERSION" ] && [ "$PREVIOUS_VERSION" = "$CURRENT_VERSION" ]; then
-        echo "Auto-update enabled. Version unchanged ($CURRENT_VERSION). Skipping download."
-    else
+        echo "Server jar missing. Downloading..."
+    elif [ -z "$INSTALLED_VERSION" ] || [ "$INSTALLED_VERSION" != "$AVAILABLE_VERSION" ]; then
         NEED_DOWNLOAD="true"
-    fi
-
-    if [ "$NEED_DOWNLOAD" = "true" ]; then
-        if [ -z "$PREVIOUS_VERSION" ]; then
-            echo "Auto-update enabled. No previous version found. Downloading for the first time..."
-        else
-            echo "Auto-update enabled. New version detected ($PREVIOUS_VERSION -> $CURRENT_VERSION). Downloading update..."
+        if [ -n "$INSTALLED_VERSION" ]; then
+            echo "Version mismatch detected ($INSTALLED_VERSION -> $AVAILABLE_VERSION). Downloading update..."
         fi
-
+    else
+        echo "HytaleServer.jar is up to date ($AVAILABLE_VERSION)."
+    fi
+    
+    # Download and update if needed
+    if [ "$NEED_DOWNLOAD" = "true" ]; then
         DOWNLOAD_ZIP="/hytale/game.zip"
-
+        
         set +e
         $DOWNLOADER_BIN -download-path "$DOWNLOAD_ZIP"
         EXIT_CODE=$?
         set -e
-
+        
         if [ $EXIT_CODE -ne 0 ]; then
             echo "Downloader error: $EXIT_CODE"
             if grep -q "403 Forbidden" <<< "$($DOWNLOADER_BIN -print-version 2>&1 || true)"; then
@@ -64,22 +83,24 @@ if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
             fi
             exit $EXIT_CODE
         fi
-
+        
         if [ ! -f "$DOWNLOAD_ZIP" ]; then
             echo "ERROR: Download expected at $DOWNLOAD_ZIP but file not found."
             exit 1
         fi
-
+        
         echo "Unpacking $DOWNLOAD_ZIP into /hytale ..."
-
-    # Remove the old jar so the new one is guaranteed to be used.
-    rm -f "$JAR_FILE"
-
+        
+        # Remove the old jar so the new one is guaranteed to be used.
+        rm -f "$JAR_FILE"
+        
         unzip -o "$DOWNLOAD_ZIP" -d /hytale
         rm -f "$DOWNLOAD_ZIP"
+        
+        echo "Update completed."
     fi
 else
-    echo "Auto-update disabled. Skipping download."
+    echo "Auto-update disabled. Skipping version check and download."
 fi
 
 cd /hytale/Server
