@@ -11,23 +11,9 @@ services:
       - hytale-data:/hytale
       # Allows to persist server authorization with /auth persistence Encrypted
       # - /etc/machine-id:/etc/machine-id:ro
-    environment:
-      HYTALE_PORT: "5520"
-      USE_AOT_CACHE: "true"
-      ENABLE_AUTO_UPDATE: "true"
-      SKIP_DELETE_ON_FORBIDDEN: "true"
-      ACCEPT_EARLY_PLUGINS: "false"
-      ALLOW_OP: "false"
-      ASSETS_PATH: "/hytale/Assets.zip"
-      AUTH_MODE: "authenticated"
-      BIND_ADDR: "0.0.0.0"
-      BACKUP_ENABLED: "false"
-      BACKUP_DIR: "/hytale/backups"
-      BACKUP_FREQUENCY: "30"
-      DISABLE_SENTRY: "false"
-      JAVA_XMS: "4G"
-      JAVA_XMX: "4G"
+    env_file:
+      - .env
     restart: unless-stopped
 
 volumes:
-  hytale-data:
+  hytale-data: {}
