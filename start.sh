@@ -18,7 +18,7 @@ $DOWNLOADER_BIN -check-update
 # -------------------------------
 if [ "$ENABLE_AUTO_UPDATE" = "true" ]; then
     # Get available version from downloader
-    AVAILABLE_VERSION_RAW="$($DOWNLOADER_BIN -print-version 2>&1 || true)"
+    AVAILABLE_VERSION_RAW="$(($DOWNLOADER_BIN -print-version 2>&1 || true) | tee /dev/stderr)"
     AVAILABLE_VERSION="$(echo "$AVAILABLE_VERSION_RAW" | tr -d '\r' | tail -n 1 | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
     
     if [ -z "$AVAILABLE_VERSION" ]; then
