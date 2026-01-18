@@ -45,7 +45,7 @@ update: ## Update Hytale Server
 		set -e; \
 		JAR_FILE="/hytale/Server/HytaleServer.jar"; \
 		DOWNLOADER_BIN="$${DOWNLOADER_BIN:-hytale-downloader}"; \
-		AVAILABLE_VERSION_RAW="$$( $$DOWNLOADER_BIN -print-version 2>&1 || true )"; \
+		AVAILABLE_VERSION_RAW="$$( $$DOWNLOADER_BIN -print-version 2>&1 | tee /dev/stderr || true )"; \
 		AVAILABLE_VERSION="$$( echo "$$AVAILABLE_VERSION_RAW" | tr -d "\r" | tail -n 1 | sed "s/^[[:space:]]*//;s/[[:space:]]*$$//" )"; \
 		echo "Available HytaleServer.jar version: $$AVAILABLE_VERSION"; \
 		INSTALLED_VERSION=""; \
